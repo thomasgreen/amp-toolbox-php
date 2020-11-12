@@ -89,9 +89,9 @@ final class TransformationEngine
         $this->transformers = [];
 
         foreach ($this->configuration->get(Configuration::KEY_TRANSFORMERS) as $transformerClass) {
-            $this->transformers[$transformerClass] = new $transformerClass(
-                ...$this->getTransformerDependencies($transformerClass)
-            );
+            $reflect = new ReflectionClass($transformerClass);
+            $instance = $reflect->newInstanceArgs($this->getTransformerDependencies($transformerClass));
+            $this->transformers[$transformerClass] = $instance;
         }
     }
 
@@ -112,19 +112,7 @@ final class TransformationEngine
 
         $dependencies = [];
         foreach ($constructor->getParameters() as $parameter) {
-            $dependencyType = null;
-
-            // The use of `ReflectionParameter::getClass()` is deprecated in PHP 8, and is superseded
-            // by `ReflectionParameter::getType()`. See https://github.com/php/php-src/pull/5209.
-            if (PHP_VERSION_ID >= 70100) {
-                if ($parameter->getType()) {
-                    /** @var \ReflectionNamedType $returnType */
-                    $returnType = $parameter->getType();
-                    $dependencyType = new ReflectionClass($returnType->getName());
-                }
-            } else {
-                $dependencyType = $parameter->getClass();
-            }
+            $dependencyType = $parameter->getClass();
 
             if ($dependencyType === null) {
                 // No type provided, so we pass `null` in the hopes that the argument is optional.
