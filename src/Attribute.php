@@ -108,7 +108,7 @@ abstract class Attribute
 
     public static function allAmp4email()
     {
-        return [self::AMP4EMAIL, self::AMP4EMAIL_EMOJI, self::AMP4EMAIL_EMOJI_ALT];
+        return [self::AMP4EMAIL, self::amp4emailemoji(), self::amp4emailemojialt()];
     }
 
     public static function allBoilerplates()
