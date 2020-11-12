@@ -1,7 +1,7 @@
 {
-  "name": "ampproject/amp-toolbox",
+  "name": "thomasgreen/amp-toolbox",
   "type": "library",
-  "description": "A collection of AMP tools making it easier to publish and host AMP pages with PHP.",
+  "description": "A collection of AMP tools making it easier to publish and host AMP pages with PHP 5.5.9.",
   "license": "Apache-2.0",
   "require": {
     "php": "^5.5.9",
