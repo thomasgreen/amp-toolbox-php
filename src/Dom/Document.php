@@ -751,7 +751,7 @@ final class Document extends DOMDocument
     private function moveInvalidHeadNodesToBody()
     {
         // Walking backwards makes it easier to move elements in the expected order.
-        if (empty($$this->head)) {
+        if (empty($this->head)) {
             return;
         }
 
