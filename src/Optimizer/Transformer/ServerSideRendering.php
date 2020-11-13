@@ -28,6 +28,7 @@ use Exception;
  * This is ported from the NodeJS optimizer while verifying against the Go version.
  *
  * NodeJS:
+ *
  * @version c92d6023ea4c9edadff593742a992da2b400a75d
  * @link    https://github.com/ampproject/amp-toolbox/blob/c92d6023ea4c9edadff593742a992da2b400a75d/packages/optimizer/lib/transformers/ServerSideRendering.js
  *
@@ -144,6 +145,7 @@ final class ServerSideRendering implements Transformer
      *
      * @param Document        $document DOM document to apply the transformations to.
      * @param ErrorCollection $errors   Collection of errors that are collected during transformation.
+     *
      * @return void
      */
     public function transform(Document $document, ErrorCollection $errors)
@@ -153,7 +155,7 @@ final class ServerSideRendering implements Transformer
         }
 
         // Reset internal state for a new transform.
-        $this->customCss             = new CssRules();
+        $this->customCss = new CssRules();
         $this->ampCustomCssByteCount = 0;
         $this->ampCustomStyleElement = null;
 
@@ -164,12 +166,12 @@ final class ServerSideRendering implements Transformer
         $canRemoveBoilerplate = true;
         foreach ($document->ampElements as $ampElement) {
             // Make sure we only deal with valid elements.
-            if (! $ampElement instanceof DOMElement) {
+            if (!$ampElement instanceof DOMElement) {
                 continue;
             }
 
             // Skip tags inside a template tag.
-            if ($this->hasAncestorWithTag($ampElement, Tag::TEMPLATE)) {
+            if ($this->hasMustacheAncestor($ampElement)) {
                 continue;
             }
 
@@ -204,7 +206,7 @@ final class ServerSideRendering implements Transformer
              * Now apply the layout to the custom elements. If we encounter any unsupported layout, the applyLayout()
              * method returns false and we can't remove the boilerplate.
              */
-            if (! $this->applyLayout($document, $ampElement, $errors)) {
+            if (!$this->applyLayout($document, $ampElement, $errors)) {
                 $errors->add(Error\CannotRemoveBoilerplate::fromUnsupportedLayout($ampElement));
                 $canRemoveBoilerplate = false;
             }
@@ -245,7 +247,7 @@ final class ServerSideRendering implements Transformer
          * Below, we're only concerned about removing the boilerplate.
          * If we've already determined that we can't, we're done here.
          */
-        if (! $canRemoveBoilerplate) {
+        if (!$canRemoveBoilerplate) {
             return;
         }
 
@@ -278,6 +280,7 @@ final class ServerSideRendering implements Transformer
      * We want to ensure we don't apply server-side rendering modifications more than once.
      *
      * @param Document $document DOM document to apply the transformations to.
+     *
      * @return bool Whether the document was already transformed.
      */
     private function isAlreadyTransformed(Document $document)
@@ -298,30 +301,33 @@ final class ServerSideRendering implements Transformer
      * @param DOMElement      $element  Element to apply the layout to.
      * @param Document        $document DOM document to apply the transformations to.
      * @param ErrorCollection $errors   Collection of errors that are collected during transformation.
+     *
      * @return boolean Whether applying the layout was successful or not.
      */
     private function applyLayout(Document $document, DOMElement $element, ErrorCollection $errors)
     {
         $ampLayout = $this->parseLayout($element->getAttribute(Attribute::LAYOUT));
 
-        $attrWidth  = $element->hasAttribute(Attribute::WIDTH) ? $element->getAttribute(Attribute::WIDTH) : null;
+        $attrWidth = $element->hasAttribute(Attribute::WIDTH) ? $element->getAttribute(Attribute::WIDTH) : null;
         $inputWidth = new CssLength($attrWidth);
         $inputWidth->validate(/* $allowAuto */ true, /* $allowFluid */ false);
-        if (! $inputWidth->isValid()) {
+        if (!$inputWidth->isValid()) {
+            echo __FILE__ . ':line ' . __LINE__ . \Kohana::debug($inputWidth, $attrWidth);
+            die;
             $errors->add(Error\CannotPerformServerSideRendering::fromInvalidInputWidth($element));
             return false;
         }
 
-        $attrHeight  = $element->hasAttribute(Attribute::HEIGHT) ? $element->getAttribute(Attribute::HEIGHT) : null;
+        $attrHeight = $element->hasAttribute(Attribute::HEIGHT) ? $element->getAttribute(Attribute::HEIGHT) : null;
         $inputHeight = new CssLength($attrHeight);
         $inputHeight->validate(/* $allowAuto */ true, /* $allowFluid */ $ampLayout === Layout::FLUID);
-        if (! $inputHeight->isValid()) {
+        if (!$inputHeight->isValid()) {
             $errors->add(Error\CannotPerformServerSideRendering::fromInvalidInputHeight($element));
             return false;
         }
 
         // Calculate effective width, height and layout.
-        $width  = $this->calculateWidth($ampLayout, $inputWidth, $element->tagName);
+        $width = $this->calculateWidth($ampLayout, $inputWidth, $element->tagName);
         $height = $this->calculateHeight($ampLayout, $inputHeight, $element->tagName);
         $layout = $this->calculateLayout(
             $ampLayout,
@@ -331,7 +337,7 @@ final class ServerSideRendering implements Transformer
             $element->getAttribute(Attribute::HEIGHTS)
         );
 
-        if (! $this->isSupportedLayout($layout)) {
+        if (!$this->isSupportedLayout($layout)) {
             $errors->add(Error\CannotPerformServerSideRendering::fromUnsupportedLayout($element, $layout));
             return false;
         }
@@ -346,6 +352,7 @@ final class ServerSideRendering implements Transformer
      * Parse the layout attribute value.
      *
      * @param string $layout Layout attribute value.
+     *
      * @return string Validated AMP layout, or empty string if none.
      */
     private function parseLayout($layout)
@@ -369,11 +376,12 @@ final class ServerSideRendering implements Transformer
      * @param string    $inputLayout Requested layout.
      * @param CssLength $inputWidth  Input value for the width.
      * @param string    $tagName     Tag name of the element.
+     *
      * @return CssLength Calculated Width.
      */
     private function calculateWidth($inputLayout, CssLength $inputWidth, $tagName)
     {
-        if ((empty($inputLayout) || $inputLayout === Layout::FIXED) && ! $inputWidth->isDefined()) {
+        if ((empty($inputLayout) || $inputLayout === Layout::FIXED) && !$inputWidth->isDefined()) {
             // These values come from AMP's runtime and can be found in
             // https://github.com/ampproject/amphtml/blob/292dc66b8c0bb078bbe3a1bca960e8f494f7fc8f/src/layout.js#L70-L86
             switch ($tagName) {
@@ -402,6 +410,7 @@ final class ServerSideRendering implements Transformer
      * @param string    $inputLayout Requested layout.
      * @param CssLength $inputHeight Input value for the height.
      * @param string    $tagName     Tag name of the element.
+     *
      * @return CssLength Calculated Height.
      */
     private function calculateHeight($inputLayout, CssLength $inputHeight, $tagName)
@@ -411,7 +420,7 @@ final class ServerSideRendering implements Transformer
                 empty($inputLayout)
                 || $inputLayout === Layout::FIXED
                 || $inputLayout === Layout::FIXED_HEIGHT
-            ) && ! $inputHeight->isDefined()
+            ) && !$inputHeight->isDefined()
         ) {
             // These values come from AMP's runtime and can be found in
             // https://github.com/ampproject/amphtml/blob/292dc66b8c0bb078bbe3a1bca960e8f494f7fc8f/src/layout.js#L70-L86
@@ -443,6 +452,7 @@ final class ServerSideRendering implements Transformer
      * @param CssLength $height      Calculated height.
      * @param string    $sizesAttr   Sizes attribute value.
      * @param string    $heightsAttr Heights attribute value.
+     *
      * @return string Calculated layout.
      */
     private function calculateLayout(
@@ -452,19 +462,19 @@ final class ServerSideRendering implements Transformer
         $sizesAttr,
         $heightsAttr
     ) {
-        if (! empty($inputLayout)) {
+        if (!empty($inputLayout)) {
             return $inputLayout;
         }
 
-        if (! $width->isDefined() && ! $height->isDefined()) {
+        if (!$width->isDefined() && !$height->isDefined()) {
             return Layout::CONTAINER;
         }
 
-        if ($height->isDefined() && (! $width->isDefined() || $width->isAuto())) {
+        if ($height->isDefined() && (!$width->isDefined() || $width->isAuto())) {
             return Layout::FIXED_HEIGHT;
         }
 
-        if ($height->isDefined() && $width->isDefined() && (! empty($sizesAttr) || ! empty($heightsAttr))) {
+        if ($height->isDefined() && $width->isDefined() && (!empty($sizesAttr) || !empty($heightsAttr))) {
             return Layout::RESPONSIVE;
         }
 
@@ -475,6 +485,7 @@ final class ServerSideRendering implements Transformer
      * Check whether a layout is support for SSR.
      *
      * @param string $layout Layout to check.
+     *
      * @return bool Whether the layout is supported for SSR.
      */
     private function isSupportedLayout($layout)
@@ -509,7 +520,7 @@ final class ServerSideRendering implements Transformer
                 break;
             case Layout::FIXED:
                 $styles = "width:{$width->getNumeral()}{$width->getUnit()};"
-                          . "height:{$height->getNumeral()}{$height->getUnit()};";
+                    . "height:{$height->getNumeral()}{$height->getUnit()};";
                 break;
             case Layout::FIXED_HEIGHT:
                 $styles = "height:{$height->getNumeral()}{$height->getUnit()};";
@@ -536,7 +547,7 @@ final class ServerSideRendering implements Transformer
         if ($element->hasAttribute(Tag::STYLE)) {
             $styles .= $element->getAttribute(Tag::STYLE);
         }
-        if (! empty($styles)) {
+        if (!empty($styles)) {
             $element->setAttribute(Tag::STYLE, $styles);
         }
 
@@ -547,6 +558,7 @@ final class ServerSideRendering implements Transformer
      * Get the class to use for a given layout.
      *
      * @param string $layout Layout to get the class for.
+     *
      * @return string Class name to use for the layout.
      */
     private function getLayoutClass($layout)
@@ -568,7 +580,7 @@ final class ServerSideRendering implements Transformer
      */
     private function addClass(DOMElement $element, $class)
     {
-        if ($element->hasAttribute(Attribute::CLASS_) && ! empty($element->getAttribute(Attribute::CLASS_))) {
+        if ($element->hasAttribute(Attribute::CLASS_) && !empty($element->getAttribute(Attribute::CLASS_))) {
             $class = "{$element->getAttribute(Attribute::CLASS_)} {$class}";
         }
 
@@ -579,6 +591,7 @@ final class ServerSideRendering implements Transformer
      * Check whether the provided layout is a layout with a defined size.
      *
      * @param string $layout Layout to check.
+     *
      * @return bool Whether the layout has a defined size.
      */
     private function isLayoutSizeDefined($layout)
@@ -603,9 +616,9 @@ final class ServerSideRendering implements Transformer
         CssLength $height
     ) {
         if (
-            ! $width->isDefined()
+            !$width->isDefined()
             || $this->isZero($width->getNumeral())
-            || ! $height->isDefined()
+            || !$height->isDefined()
             || $width->getUnit() !== $height->getUnit()
         ) {
             return;
@@ -635,6 +648,7 @@ final class ServerSideRendering implements Transformer
      * @param CssLength $width    Calculated width of the element.
      * @param CssLength $height   Calculated height of the element.
      * @param string    $style    Style to use for the sizer. Defaults to padding-top in percentage.
+     *
      * @return DOMElement
      */
     private function createResponsiveSizer(
@@ -643,8 +657,8 @@ final class ServerSideRendering implements Transformer
         CssLength $height,
         $style = 'padding-top:%s%%'
     ) {
-        $padding       = $height->getNumeral() / $width->getNumeral() * 100;
-        $paddingString = (string) round($padding, 4);
+        $padding = $height->getNumeral() / $width->getNumeral() * 100;
+        $paddingString = (string)round($padding, 4);
 
         $style = empty($style) ? 'display:block' : "display:block;{$style}";
 
@@ -663,6 +677,7 @@ final class ServerSideRendering implements Transformer
      * @param Document  $document DOM document to create the sizer for.
      * @param CssLength $width    Calculated width of the element.
      * @param CssLength $height   Calculated height of the element.
+     *
      * @return DOMElement
      */
     private function createIntrinsicSizer(Document $document, CssLength $width, CssLength $height)
@@ -680,8 +695,10 @@ final class ServerSideRendering implements Transformer
             Attribute::SRC,
             sprintf(
                 'data:image/svg+xml;base64,%s',
-                base64_encode("<svg height='{$height->getNumeral()}' width='{$width->getNumeral()}' "
-                              . "xmlns='http://www.w3.org/2000/svg' version='1.1'/>")
+                base64_encode(
+                    "<svg height='{$height->getNumeral()}' width='{$width->getNumeral()}' "
+                    . "xmlns='http://www.w3.org/2000/svg' version='1.1'/>"
+                )
             )
         );
 
@@ -695,6 +712,7 @@ final class ServerSideRendering implements Transformer
      *
      * @param DOMElement $element Element to check the ancestor tree of.
      * @param string     $tagName Name of the tag to look for.
+     *
      * @return bool Whether the element has an ancestor of the given tag name.
      */
     private function hasAncestorWithTag(DOMElement $element, $tagName)
@@ -702,6 +720,20 @@ final class ServerSideRendering implements Transformer
         $parent = $element->parentNode;
         while ($parent !== null) {
             if ($parent instanceof DOMElement && $parent->tagName === $tagName) {
+                return true;
+            }
+            $parent = $parent->parentNode;
+        }
+        return false;
+    }
+
+    private function hasMustacheAncestor(DOMElement $element)
+    {
+        $parent = $element->parentNode;
+        while ($parent !== null) {
+            if ($parent instanceof DOMElement && $parent->tagName === Tag::TEMPLATE) {
+                return true;
+            } elseif ($parent->tagName == Tag::SCRIPT && $parent->getAttribute('template') == 'amp-mustache') {
                 return true;
             }
             $parent = $parent->parentNode;
@@ -717,12 +749,13 @@ final class ServerSideRendering implements Transformer
      * validation it is checked here as well.
      *
      * @param DOMElement $element Element to check.
+     *
      * @return bool Whether the amp-experiment element is actually used.
      */
     private function isAmpExperimentUsed(DOMElement $element)
     {
         $script = null;
-        $child  = $element->firstChild;
+        $child = $element->firstChild;
 
         while ($child) {
             if (
@@ -780,13 +813,14 @@ final class ServerSideRendering implements Transformer
      * @param Document        $document   DOM document to apply the transformations to.
      * @param DOMElement      $ampElement Element to adapt.
      * @param ErrorCollection $errors     Collection of errors that are collected during transformation.
+     *
      * @return string[]|false Attribute names to remove, or false if attributes could not be adapted.
      */
     private function adaptBlockingAttributes(Document $document, DOMElement $ampElement, ErrorCollection $errors)
     {
         $attributes = $ampElement->attributes;
 
-        $customCss          = [];
+        $customCss = [];
         $attributesToRemove = [];
 
         foreach ($attributes as $attribute) {
@@ -806,7 +840,7 @@ final class ServerSideRendering implements Transformer
                             break;
                         }
 
-                        $customCss            = array_merge(
+                        $customCss = array_merge(
                             $customCss,
                             $this->extractSizesAttributeCss($document, $ampElement, $attribute)
                         );
@@ -814,7 +848,7 @@ final class ServerSideRendering implements Transformer
                         break;
 
                     case Attribute::HEIGHTS:
-                        $customCss            = array_merge(
+                        $customCss = array_merge(
                             $customCss,
                             $this->extractHeightsAttributeCss($document, $ampElement, $attribute)
                         );
@@ -835,7 +869,7 @@ final class ServerSideRendering implements Transformer
             }
         }
 
-        if (!empty($customCss) && ! $this->checkCustomCssSize($document, $customCss)) {
+        if (!empty($customCss) && !$this->checkCustomCssSize($document, $customCss)) {
             $errors->add(Error\CannotRemoveBoilerplate::fromAttributesRequiringBoilerplate($ampElement));
             return false;
         }
@@ -853,6 +887,7 @@ final class ServerSideRendering implements Transformer
      *
      * @param Document  $document Document to check the custom CSS size of.
      * @param CssRule[] $cssRules CSS rules that are meant to be added.
+     *
      * @return bool Whether the custom CSS rule still fits within the byte limits.
      */
     private function checkCustomCssSize(Document $document, $cssRules)
@@ -925,6 +960,7 @@ final class ServerSideRendering implements Transformer
      * @param Document   $document  Document containing the element to adapt.
      * @param DOMElement $element   Element to adapt.
      * @param DOMAttr    $attribute Attribute to be extracted.
+     *
      * @return CssRule[] Extract custom CSS styling.
      */
     private function extractSizesAttributeCss(Document $document, DOMElement $element, DOMAttr $attribute)
@@ -960,6 +996,7 @@ final class ServerSideRendering implements Transformer
      * @param Document   $document  Document containing the element to adapt.
      * @param DOMElement $element   Element to adapt.
      * @param DOMAttr    $attribute Attribute to be extracted.
+     *
      * @return CssRule[] Extract custom CSS styling.
      */
     private function extractHeightsAttributeCss(Document $document, DOMElement $element, DOMAttr $attribute)
@@ -986,6 +1023,7 @@ final class ServerSideRendering implements Transformer
      * @param DOMAttr    $attribute       Attribute to be extracted.
      * @param string[]   $mainStyle       CSS rule template for the main style.
      * @param string[]   $mediaQueryStyle CSS rule template for a media query style.
+     *
      * @return CssRule[] Array of CSS rules to use.
      */
     private function extractAttributeCss(
@@ -1000,13 +1038,13 @@ final class ServerSideRendering implements Transformer
         }
 
         $sourceSizes = explode(',', $attribute->nodeValue);
-        $lastItem    = trim(array_pop($sourceSizes), self::CSS_TRIM_CHARACTERS);
+        $lastItem = trim(array_pop($sourceSizes), self::CSS_TRIM_CHARACTERS);
 
         if (empty($lastItem)) {
             throw InvalidHtmlAttribute::fromAttribute($attribute->nodeName, $element);
         }
 
-        $cssRules   = [];
+        $cssRules = [];
         $cssRules[] = new CssRule($mainStyle[0], sprintf($mainStyle[1], $lastItem));
 
         foreach (array_reverse($sourceSizes) as $sourceSize) {
@@ -1035,7 +1073,7 @@ final class ServerSideRendering implements Transformer
         }
 
         $elementId = $document->getElementId($element);
-        $cssRules  = array_map(
+        $cssRules = array_map(
             static function (CssRule $cssRule) use ($elementId) {
                 return $cssRule->applyID($elementId);
             },
@@ -1056,6 +1094,7 @@ final class ServerSideRendering implements Transformer
      * @param Document   $document  Document containing the element to adapt.
      * @param DOMElement $element   Element to adapt.
      * @param DOMAttr    $attribute Attribute to be extracted.
+     *
      * @return CssRule[] Extract custom CSS styling.
      */
     private function extractMediaAttributeCss(Document $document, DOMElement $element, DOMAttr $attribute)
@@ -1066,11 +1105,11 @@ final class ServerSideRendering implements Transformer
             return [];
         }
 
-        $notFound       = 0;
+        $notFound = 0;
         $attributeValue = preg_replace('/^not\s+/i', '', $attributeValue, 1, $notFound);
-        $not            = $notFound ? '' : 'not ';
+        $not = $notFound ? '' : 'not ';
 
-        if ($attributeValue[0] === '(' && ! $notFound) {
+        if ($attributeValue[0] === '(' && !$notFound) {
             // 'not' can only be used with a media type, so we use 'all' as media type if it is missing.
             // See quirksmode.org/blog/archives/2012/11/what_the_hells.html#c15586
             $attributeValue = 'all and ' . $attributeValue;
@@ -1078,7 +1117,7 @@ final class ServerSideRendering implements Transformer
 
         return [
             CssRule::withMediaQuery("@media {$not}{$attributeValue}", '#__ID__', 'display:none')
-                   ->applyID($document->getElementId($element)),
+                ->applyID($document->getElementId($element)),
         ];
     }
 
@@ -1086,6 +1125,7 @@ final class ServerSideRendering implements Transformer
      * Check whether a given element should be excluded from applying its layout on the server.
      *
      * @param DOMElement $element Element to check.
+     *
      * @return bool Whether to exclude the element or not.
      */
     private function isExcludedElement(DOMElement $element)
@@ -1099,6 +1139,7 @@ final class ServerSideRendering implements Transformer
      * This works correctly with both integer and float values.
      *
      * @param int|float $number Number to check for zero.
+     *
      * @return bool Whether the provided number is zero.
      * @throws InvalidArgument When an unsupported number type is provided.
      */
