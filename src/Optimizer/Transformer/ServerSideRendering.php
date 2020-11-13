@@ -312,8 +312,6 @@ final class ServerSideRendering implements Transformer
         $inputWidth = new CssLength($attrWidth);
         $inputWidth->validate(/* $allowAuto */ true, /* $allowFluid */ false);
         if (!$inputWidth->isValid()) {
-            echo __FILE__ . ':line ' . __LINE__ . \Kohana::debug($inputWidth, $attrWidth);
-            die;
             $errors->add(Error\CannotPerformServerSideRendering::fromInvalidInputWidth($element));
             return false;
         }
