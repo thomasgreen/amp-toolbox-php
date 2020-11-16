@@ -1016,7 +1016,7 @@ final class Document extends DOMDocument
             while (preg_match(self::AMP_BIND_ATTR_PATTERN, substr($oldAttrs, $offset), $attrMatches)) {
                 $offset += strlen($attrMatches[0]);
 
-                if ('[' === $attrMatches['name'][0]) {
+                if ('[' === substr($attrMatches['name'], 0, 1)) {
                     $newAttrs .= ' ' . self::AMP_BIND_DATA_ATTR_PREFIX . trim($attrMatches['name'], '[]');
                     if (isset($attrMatches['value'])) {
                         $newAttrs .= $attrMatches['value'];
