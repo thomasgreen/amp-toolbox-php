@@ -181,7 +181,7 @@ final class AmpRuntimeCss implements Transformer
             $styles = $response->getBody();
         }
 
-        $ampRuntimeStyle->textContent = $styles;
+        $ampRuntimeStyle->nodeValue = $styles;
     }
 
     /**
