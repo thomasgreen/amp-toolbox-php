@@ -833,7 +833,7 @@ final class Document extends DOMDocument
         static $regexPattern = null;
 
         if (null === $regexPattern) {
-            $regexPattern = '#<(' . implode('|', Tag::selfClosingTags()) . ')([^>]*?)(?>\s*\/)?>(?!</\1>)#';
+            $regexPattern = '#<(' . implode('|', Tag::selfClosingTags()) . ')([^>]*?)(?>\s*\/)?((?<!=)>)(?!</\1>)#';
         }
 
         $this->selfClosingTagsTransformed = true;
