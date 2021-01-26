@@ -134,6 +134,8 @@ final class ServerSideRendering implements Transformer
                 continue;
             }
 
+            echo __FILE__ . ':line ' . __LINE__ . \Kohana::debug('test');
+            die;
             /*
              * amp-experiment is a render delaying extension iff the tag is used in the doc. We check for that here
              * rather than checking for the existence of the amp-experiment script in IsRenderDelayingExtension below.
@@ -691,8 +693,12 @@ final class ServerSideRendering implements Transformer
 
     private function hasMustacheAncestor(Element $element)
     {
+        echo __FILE__ . ':line ' . __LINE__ . \Kohana::debug('in here');
+        die;
         $parent = $element->parentNode;
         while ($parent !== null) {
+            echo __FILE__ . ':line ' . __LINE__ . \Kohana::debug('in here');
+            die;
             if ($parent instanceof Element) {
                 if ($parent->tagName === Tag::TEMPLATE ||
                     ($parent->tagName == Tag::SCRIPT && $parent->getAttribute('template') == 'amp-mustache')
