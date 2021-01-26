@@ -693,7 +693,7 @@ final class ServerSideRendering implements Transformer
     {
         $parent = $element->parentNode;
         while ($parent !== null) {
-            if ($parent instanceof DOMElement) {
+            if ($parent instanceof Element) {
                 if ($parent->tagName === Tag::TEMPLATE ||
                     ($parent->tagName == Tag::SCRIPT && $parent->getAttribute('template') == 'amp-mustache')
                 ) {
