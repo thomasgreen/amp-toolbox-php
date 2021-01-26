@@ -5,7 +5,7 @@ namespace AmpProject;
 /**
  * Interface with constants for the different types of attributes.
  *
- * @package ampproject/common
+ * @package ampproject/amp-toolbox
  */
 abstract class Attribute
 {

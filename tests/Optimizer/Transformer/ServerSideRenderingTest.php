@@ -8,13 +8,14 @@ use AmpProject\Optimizer\ErrorCollection;
 use AmpProject\Optimizer\Exception\InvalidHtmlAttribute;
 use AmpProject\Tests\ErrorComparison;
 use AmpProject\Tests\MarkupComparison;
+use AmpProject\Tests\TestCase;
 use AmpProject\Tests\TestMarkup;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Test the ServerSideRendering transformer.
  *
- * @package ampproject/optimizer
+ * @covers \AmpProject\Optimizer\Transformer\ServerSideRendering
+ * @package ampproject/amp-toolbox
  */
 final class ServerSideRenderingTest extends TestCase
 {

@@ -6,13 +6,14 @@ use AmpProject\Dom\Document;
 use AmpProject\Optimizer\Configuration\TransformedIdentifierConfiguration;
 use AmpProject\Optimizer\ErrorCollection;
 use AmpProject\Tests\MarkupComparison;
+use AmpProject\Tests\TestCase;
 use AmpProject\Tests\TestMarkup;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Test the TransformedIdentifier transformer.
  *
- * @package ampproject/optimizer
+ * @covers \AmpProject\Optimizer\Transformer\TransformedIdentifier
+ * @package ampproject/amp-toolbox
  */
 final class TransformedIdentifierTest extends TestCase
 {

@@ -7,13 +7,14 @@ use AmpProject\Optimizer\Error;
 use AmpProject\Optimizer\ErrorCollection;
 use AmpProject\Tests\ErrorComparison;
 use AmpProject\Tests\MarkupComparison;
+use AmpProject\Tests\TestCase;
 use AmpProject\Tests\TestMarkup;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Test the ReorderHead transformer.
  *
- * @package ampproject/optimizer
+ * @covers \AmpProject\Optimizer\Transformer\ReorderHead
+ * @package ampproject/amp-toolbox
  */
 final class ReorderHeadTest extends TestCase
 {

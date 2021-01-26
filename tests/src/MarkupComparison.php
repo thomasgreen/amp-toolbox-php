@@ -5,7 +5,7 @@ namespace AmpProject\Tests;
 /**
  * Compare HTML markup without failing on whitespace or alignment.
  *
- * @package ampproject/optimizer
+ * @package ampproject/amp-toolbox
  */
 trait MarkupComparison
 {
@@ -73,6 +73,10 @@ trait MarkupComparison
         $actual   = preg_replace('/(?<=\s)([a-zA-Z-_]+)="(?:\1|)"/i', '$1', $actual);
         $expected = preg_replace('/(?<=\s)([a-zA-Z-_]+)="(?:\1|)"/i', '$1', $expected);
 
+        // Normalize inline styles to always end with a semicolon.
+        $actual   = preg_replace('/\s+style="([^"]+?)(?:;)?"/i', ' style="$1;"', $actual);
+        $expected = preg_replace('/\s+style="([^"]+?)(?:;)?"/i', ' style="$1;"', $expected);
+
         $normalizeAttributes = static function ($element) {
             // Extract attributes for the given element.
             if (!preg_match('#^(<[a-z0-9-]+)(\s[^>]+)>$#i', $element, $matches)) {
@@ -105,8 +109,8 @@ trait MarkupComparison
         };
 
         // Split into an array of individual elements.
-        $actual   = preg_split('#(<[^>]+>|[^<>]+)#', $actual, -1, PREG_SPLIT_DELIM_CAPTURE);
-        $expected = preg_split('#(<[^>]+>|[^<>]+)#', $expected, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $actual   = preg_split('#((?><!--.*?-->)|<(?>"[^"]+"|\'[^\']+\'|[^"\'>]+)+>|(?>[^<>]+))#', $actual, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+        $expected = preg_split('#((?><!--.*?-->)|<(?>"[^"]+"|\'[^\']+\'|[^"\'>]+)+>|(?>[^<>]+))#', $expected, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
 
         // Normalize the attributes for each individual element.
         $actual   = array_map($normalizeAttributes, array_filter($actual));

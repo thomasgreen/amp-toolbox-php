@@ -1,24 +1,24 @@
 <?php
 
-namespace AmpProject\Common;
+namespace AmpProject\Dom;
 
+use AmpProject\Amp;
 use AmpProject\Attribute;
-use AmpProject\Dom\Document;
-use AmpProject\Tests\AssertContainsCompatibility;
+use AmpProject\Exception\MaxCssByteCountExceeded;
+use AmpProject\Tag;
+use AmpProject\Tests\MarkupComparison;
+use AmpProject\Tests\TestCase;
 use DOMNode;
-use PHPUnit\Framework\TestCase;
-use ReflectionClass;
-use ReflectionException;
 
 /**
  * Tests for AmpProject\Dom\Document.
  *
- * @covers Document
- * @package ampproject/common
+ * @covers \AmpProject\Dom\Document
+ * @package ampproject/amp-toolbox
  */
 class DocumentTest extends TestCase
 {
-    use AssertContainsCompatibility;
+    use MarkupComparison;
 
     /**
      * Data for AmpProject\Dom\Document test.
@@ -353,14 +353,44 @@ class DocumentTest extends TestCase
                 ',
             ],
             'mustache_url_encoded_attributes_in_template_tags' => [
-              'utf-8',
+                'utf-8',
                 '<!DOCTYPE html><html>' . $head . '<body><template type="amp-mustache"><div><form action="{{action}}"><a href="{{url}}"><img src="{{src}}"></a></form></div></template></body></html>',
                 '<!DOCTYPE html><html>' . $head . '<body><template type="amp-mustache"><div><form action="{{action}}"><a href="{{url}}"><img src="{{src}}"></a></form></div></template></body></html>',
             ],
             'mustache_url_encoded_attributes_in_script_tags' => [
-              'utf-8',
+                'utf-8',
                 '<!DOCTYPE html><html>' . $head . '<body><script type="text/plain" template="amp-mustache"><div><form action="{{action}}"><a href="{{url}}"><img src="{{src}}"></a></form></div></script></body></html>',
                 '<!DOCTYPE html><html>' . $head . '<body><script type="text/plain" template="amp-mustache"><div><form action="{{action}}"><a href="{{url}}"><img src="{{src}}"></a></form></div></script></body></html>',
+            ],
+            'schema_markup_check' => [
+                'utf-8',
+                '
+                <!DOCTYPE html>
+                <html>
+                    <head><meta charset="utf-8"></head>
+                    <body>
+                    <script type="application/ld+json">
+                        {"@context":"http:\/\/schema.org","@type":"LiveBlogPosting","url":"https:\/\/amp.dev\/documentation\/examples\/news-publishing\/live_blog\/","articleBody":"<p><img class=\"aligncenter size-large wp-image-807214\" src=\"https:\/\/images.frandroid.com\/wp-content\/uploads\/2020\/11\/sonos-beam-1200x799.jpg\" alt=\"\" width=\"1200\" height=\"799\" \/><br \/><\/p>\n","datePublished":"2016-09-08T23:04:28.24337"}
+                    </script>
+                    </body>
+                </html>
+                ',
+                '
+                <!DOCTYPE html>
+                <html>
+                    <head><meta charset="utf-8"></head>
+                    <body>
+                    <script type="application/ld+json">
+                        {"@context":"http:\/\/schema.org","@type":"LiveBlogPosting","url":"https:\/\/amp.dev\/documentation\/examples\/news-publishing\/live_blog\/","articleBody":"<p><img class=\"aligncenter size-large wp-image-807214\" src=\"https:\/\/images.frandroid.com\/wp-content\/uploads\/2020\/11\/sonos-beam-1200x799.jpg\" alt=\"\" width=\"1200\" height=\"799\" \/><br \/><\/p>\n","datePublished":"2016-09-08T23:04:28.24337"}
+                    </script>
+                    </body>
+                </html>
+                '
+            ],
+            'self_closing_tag' => [
+                'utf-8',
+                '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><br/></body></html>',
+                '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><br></body></html>',
             ],
         ];
     }
@@ -373,8 +403,8 @@ class DocumentTest extends TestCase
      * @param string $expected Expected target content.
      *
      * @dataProvider dataDomDocument
-     * @covers       Document::loadHTML()
-     * @covers       Document::saveHTML()
+     * @covers       \AmpProject\Dom\Document::loadHTML()
+     * @covers       \AmpProject\Dom\Document::saveHTML()
      */
     public function testDomDocument($charset, $source, $expected)
     {
@@ -383,36 +413,17 @@ class DocumentTest extends TestCase
     }
 
     /**
-     * Assert markup is equal.
-     *
-     * @param string $expected Expected markup.
-     * @param string $actual   Actual markup.
-     */
-    public function assertEqualMarkup($expected, $actual)
-    {
-        $actual   = preg_replace('/\s+/', ' ', $actual);
-        $expected = preg_replace('/\s+/', ' ', $expected);
-        $actual   = preg_replace('/(?<=>)\s+(?=<)/', '', trim($actual));
-        $expected = preg_replace('/(?<=>)\s+(?=<)/', '', trim($expected));
-
-        $this->assertEquals(
-            array_filter(preg_split('#(<!--.*?-->|<[^>]+>|[^<>]+)#', $expected, -1, PREG_SPLIT_DELIM_CAPTURE)),
-            array_filter(preg_split('#(<!--.*?-->|<[^>]+>|[^<>]+)#', $actual, -1, PREG_SPLIT_DELIM_CAPTURE))
-        );
-    }
-
-    /**
      * Test convertAmpBindAttributes.
      *
-     * @covers Document::convertAmpBindAttributes()
+     * @covers \AmpProject\Dom\Document::convertAmpBindAttributes()
      */
     public function testAmpBindConversion()
     {
         $original  = '<amp-img width=300 height="200" data-foo="bar" selected src="/img/dog.jpg" [src]="myAnimals[currentAnimal].imageUrl"></amp-img>';
         $converted = Document::fromHtml($original)->saveHTML();
         $this->assertNotEquals($original, $converted);
-        $this->assertStringContains(Document::AMP_BIND_DATA_ATTR_PREFIX . 'src="myAnimals[currentAnimal].imageUrl"', $converted);
-        $this->assertStringContains('width="300" height="200" data-foo="bar" selected', $converted);
+        $this->assertStringContainsString(Document::AMP_BIND_DATA_ATTR_PREFIX . 'src="myAnimals[currentAnimal].imageUrl"', $converted);
+        $this->assertStringContainsString('width="300" height="200" data-foo="bar" selected', $converted);
 
         // Check tag with self-closing attribute.
         $original  = '<input type="text" role="textbox" class="calc-input" id="liens" name="liens" [value]="(result1 != null) ? result1.liens : \'verifying…\'" />';
@@ -433,15 +444,15 @@ class DocumentTest extends TestCase
         ];
         foreach ($malformed_html as $html) {
             $converted = Document::fromHtml($html)->saveHTML();
-            $this->assertStringNotContains(Document::AMP_BIND_DATA_ATTR_PREFIX, $converted, "Source: {$html}");
+            $this->assertStringNotContainsString(Document::AMP_BIND_DATA_ATTR_PREFIX, $converted, "Source: {$html}");
         }
     }
 
     /**
      * Test handling noscript elements in the head.
      *
-     * @covers Document::maybeReplaceNoscriptElements()
-     * @covers Document::maybeRestoreNoscriptElements()
+     * @covers \AmpProject\Dom\Document::maybeReplaceNoscriptElements()
+     * @covers \AmpProject\Dom\Document::maybeRestoreNoscriptElements()
      */
     public function testHeadNoscriptElementHandling()
     {
@@ -524,7 +535,7 @@ class DocumentTest extends TestCase
     /**
      * Test that HEAD and BODY elements are always present.
      *
-     * @covers Document::normalizeDocumentStructure()
+     * @covers \AmpProject\Dom\Document::normalizeDocumentStructure()
      */
     public function testEnsuringHeadBody()
     {
@@ -565,7 +576,7 @@ class DocumentTest extends TestCase
     /**
      * Test that invalid head nodes are moved to body.
      *
-     * @covers Document::moveInvalidHeadNodesToBody()
+     * @covers \AmpProject\Dom\Document::moveInvalidHeadNodesToBody()
      */
     public function testInvalidHeadNodes()
     {
@@ -577,7 +588,7 @@ class DocumentTest extends TestCase
         $this->assertEquals('meta', $dom->head->firstChild->tagName);
         $this->assertNull($dom->head->firstChild->nextSibling);
         $body_first_child = $dom->body->firstChild;
-        $this->assertInstanceOf('DOMElement', $body_first_child);
+        $this->assertInstanceOf(Element::class, $body_first_child);
         $this->assertEquals('text', $body_first_child->textContent);
 
         // Valid nodes.
@@ -642,7 +653,7 @@ class DocumentTest extends TestCase
      * Test isValidHeadNode().
      *
      * @dataProvider getHeadNodeData
-     * @covers       Document::isValidHeadNode()
+     * @covers       \AmpProject\Dom\Document::isValidHeadNode()
      *
      * @param Document $dom   DOM document to use.
      * @param DOMNode  $node  Node.
@@ -656,8 +667,7 @@ class DocumentTest extends TestCase
     /**
      * Test that the $html property fetches the right element.
      *
-     * @covers Document::__get()
-     * @covers Document::$html
+     * @covers \AmpProject\Dom\Document::__get()
      */
     public function testHtmlProperty()
     {
@@ -669,8 +679,7 @@ class DocumentTest extends TestCase
     /**
      * Test that the $head property fetches the right element.
      *
-     * @covers Document::__get()
-     * @covers Document::$head
+     * @covers \AmpProject\Dom\Document::__get()
      */
     public function testHeadProperty()
     {
@@ -682,8 +691,7 @@ class DocumentTest extends TestCase
     /**
      * Test that the $body property fetches the right element.
      *
-     * @covers Document::__get()
-     * @covers Document::$body
+     * @covers \AmpProject\Dom\Document::__get()
      */
     public function testBodyProperty()
     {
@@ -695,8 +703,7 @@ class DocumentTest extends TestCase
     /**
      * Test that the $ampElements property fetches the right elements.
      *
-     * @covers Document::__get()
-     * @covers Document::$ampElements
+     * @covers \AmpProject\Dom\Document::__get()
      */
     public function testAmpElementsProperty()
     {
@@ -745,6 +752,7 @@ class DocumentTest extends TestCase
      * Test that AMP dev mode on the root DOM element is initially set.
      *
      * @dataProvider getInitialAmpDevModeData
+     * @covers \AmpProject\Dom\Document::hasInitialAmpDevMode()
      *
      * @param Document $document          Document.
      * @param boolean  $hasInitialDevMode Whether $document should have dev mode initially or not.
@@ -820,7 +828,7 @@ class DocumentTest extends TestCase
      * Test Document::getElementId().
      *
      * @dataProvider getGetElementIdData
-     * @covers Document::getElementId()
+     * @covers \AmpProject\Dom\Document::getElementId()
      *
      * @param array $checks Checks to perform. Each check is an array containing an element, a prefix and an expected ID.
      */
@@ -841,7 +849,7 @@ class DocumentTest extends TestCase
     /**
      * Test whether existing element IDs are taken into account, even if the index counter is off.
      *
-     * @covers Document::getElementId()
+     * @covers \AmpProject\Dom\Document::getElementId()
      */
     public function testGetElementIdOnPreexistingIds()
     {
@@ -853,5 +861,128 @@ class DocumentTest extends TestCase
         $dom->body->appendChild($element);
 
         $this->assertEquals('some-prefix-3', $dom->getElementId($element, 'some-prefix'));
+    }
+
+    /**
+     * Data provider for testing the byte count properties.
+     *
+     * @return array Testing data.
+     */
+    public function dataByteCounts()
+    {
+        return [
+            'amp_custom_style_tag' => [
+                '<html><head><style amp-custom>12345</style>', 5, 0,
+            ],
+            'one_inline_style_attribute' => [
+                '<html><body><div style="12345"></div></body></html>', 0, 5,
+            ],
+            'multiple_inline_style_attributes' => [
+                '<html><body><div style="1234"></div><div style="567"><div style="89"></body></html>', 0, 9,
+            ],
+            'amp_custom_style_tag_and_multiple_inline_style_attributes' => [
+                '<html><head><style amp-custom>12345</style></head><body><div style="1234"></div><div style="567"><div style="89"></body></html>', 5, 9,
+            ],
+            'amp_custom_style_tag_outside_head' => [
+                '<html><head><style amp-custom>12345</style></head><body><style amp-custom>123</style></body></html>', 5, 0,
+            ],
+            'multibyte_chars_are_counted_in_bytes_not_chars' => [
+                '<html><head><style amp-custom>Iñtërnâtiônàlizætiøn</style></head><body><div style="Iñtërnâtiônàlizætiøn"></div></body></html>', 27, 27,
+            ],
+        ];
+    }
+
+    /**
+     * Test the byte count properties.
+     *
+     * @dataProvider dataByteCounts
+     *
+     * @param string $html              HTML to test against.
+     * @param int    $expectedAmpCustom Expected number of bytes of the <style amp-custom> tag.
+     * @param int    $expectedInline    Expected number of bytes of inline styles.
+     */
+    public function testByteCounts($html, $expectedAmpCustom, $expectedInline)
+    {
+        $document = Document::fromHtml($html);
+        $this->assertEquals($expectedAmpCustom, $document->ampCustomStyleByteCount);
+        $this->assertEquals($expectedInline, $document->inlineStyleByteCount);
+    }
+
+    /**
+     * Test the Document::getRemainingCssSpace() method.
+     *
+     * @covers \AmpProject\Dom\Document::getRemainingCustomCssSpace()
+     */
+    public function testGetRemainingCssSpace()
+    {
+        $document = new Document();
+        $ampCustomStyle = $document->createElement(Tag::STYLE);
+        $ampCustomStyle->setAttribute(Attribute::AMP_CUSTOM, null);
+        $ampCustomStyle->textContent = str_pad('', Amp::MAX_CSS_BYTE_COUNT - 10, 'X');
+        $document->head->appendChild($ampCustomStyle);
+
+        /** @var Element $element */
+        $element = $document->createElement(Tag::DIV);
+        $document->body->appendChild($element);
+        $element->addInlineStyle('12345');
+
+        $this->assertEquals(PHP_INT_MAX, $document->getRemainingCustomCssSpace());
+        $document->enforceCssMaxByteCount(Amp::MAX_CSS_BYTE_COUNT);
+        $this->assertEquals(5, $document->getRemainingCustomCssSpace());
+    }
+
+
+    /**
+     * Test the Document::addAmpCustomStyle() method without byte limit.
+     *
+     * @covers \AmpProject\Dom\Document::addAmpCustomStyle()
+     */
+    public function testAddAmpCustomStyleWithoutLimit()
+    {
+        $document = new Document();
+        $ampCustomStyle = $document->createElement(Tag::STYLE);
+        $ampCustomStyle->setAttribute(Attribute::AMP_CUSTOM, null);
+        $ampCustomStyle->textContent = str_pad('', Amp::MAX_CSS_BYTE_COUNT - 28, 'X');
+        $document->head->appendChild($ampCustomStyle);
+
+        // Custom styles can be added.
+        $document->addAmpCustomStyle('h1{color:red}');
+        $document->addAmpCustomStyle('h2{color:green}');
+
+        $this->assertStringEndsWith('XXXXXh1{color:red}h2{color:green}', $document->ampCustomStyle->textContent);
+
+        // No exception will be thrown here, even though we go past the CSS byte count limit.
+        $document->addAmpCustomStyle('XXXXX');
+
+        $this->assertStringEndsWith('XXXXXh1{color:red}h2{color:green}XXXXX', $document->ampCustomStyle->textContent);
+    }
+
+    /**
+     * Test the Document::addAmpCustomStyle() method with byte limit.
+     *
+     * @covers \AmpProject\Dom\Document::addAmpCustomStyle()
+     */
+    public function testAddAmpCustomStyleWithLimit()
+    {
+        $document = new Document();
+        $document->enforceCssMaxByteCount(Amp::MAX_CSS_BYTE_COUNT);
+        $ampCustomStyle = $document->createElement(Tag::STYLE);
+        $ampCustomStyle->setAttribute(Attribute::AMP_CUSTOM, null);
+        $ampCustomStyle->textContent = str_pad('', Amp::MAX_CSS_BYTE_COUNT - 28, 'X');
+        $document->head->appendChild($ampCustomStyle);
+
+        // Custom styles can be added.
+        $document->addAmpCustomStyle('h1{color:red}');
+        $document->addAmpCustomStyle('h2{color:green}');
+
+        $this->assertStringEndsWith('XXXXXh1{color:red}h2{color:green}', $document->ampCustomStyle->textContent);
+
+        // Exception is thrown if maximum allowed byte count is exceeded.
+        $this->expectException(MaxCssByteCountExceeded::class);
+        $this->expectExceptionMessage(
+            'Maximum allowed CSS byte count exceeded for amp-custom style'
+        );
+
+        $document->addAmpCustomStyle('X');
     }
 }

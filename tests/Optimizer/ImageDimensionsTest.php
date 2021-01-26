@@ -4,16 +4,16 @@ namespace AmpProject\Optimizer;
 
 use AmpProject\Attribute;
 use AmpProject\Dom\Document;
+use AmpProject\Dom\Element;
 use AmpProject\Layout;
 use AmpProject\Tag;
-use DOMElement;
-use PHPUnit\Framework\TestCase;
+use AmpProject\Tests\TestCase;
 
 /**
  * Tests for AmpProject\Optimizer\ImageDimensions.
  *
- * @covers  ImageDimensions
- * @package ampproject/optimizer
+ * @covers  \AmpProject\Optimizer\ImageDimensions
+ * @package ampproject/amp-toolbox
  */
 class ImageDimensionsTest extends TestCase
 {
@@ -25,7 +25,7 @@ class ImageDimensionsTest extends TestCase
      */
     public function testItCanBeInstantiated()
     {
-        $image           = new DOMElement(Tag::IMG);
+        $image           = new Element(Tag::IMG);
         $imageDimensions = new ImageDimensions($image);
 
         $this->assertInstanceOf(ImageDimensions::class, $imageDimensions);
@@ -235,7 +235,7 @@ class ImageDimensionsTest extends TestCase
             'small intrinsic'                         => [50, 50, Layout::INTRINSIC, null, false],
             'large responsive'                        => [500, 500, Layout::RESPONSIVE, null, false],
             'small responsive'                        => [50, 50, Layout::RESPONSIVE, null, false],
-            'large fixed height'                      => ['auto', 500, Layout::FIXED_HEIGHT, null, true],
+            'large fixed height'                      => ['auto', 500, Layout::FIXED_HEIGHT, null, false],
             'small fixed height'                      => ['auto', 50, Layout::FIXED_HEIGHT, null, true],
             'no dimensions no layout'                 => [null, null, null, null, true],
             'no dimensions fill (checks parent size)' => [null, null, Layout::FILL, null, false],

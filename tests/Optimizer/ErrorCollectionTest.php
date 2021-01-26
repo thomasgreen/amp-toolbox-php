@@ -3,13 +3,14 @@
 namespace AmpProject\Optimizer;
 
 use AmpProject\Optimizer\Error\UnknownError;
-use PHPUnit\Framework\TestCase;
+use AmpProject\Tests\TestCase;
 use ReflectionClass;
 
 /**
  * Test the error collection container.
  *
- * @package ampproject/optimizer
+ * @covers \AmpProject\Optimizer\ErrorCollection
+ * @package ampproject/amp-toolbox
  */
 final class ErrorCollectionTest extends TestCase
 {
