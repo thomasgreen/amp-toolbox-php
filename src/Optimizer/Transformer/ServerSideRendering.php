@@ -689,7 +689,7 @@ final class ServerSideRendering implements Transformer
         return false;
     }
 
-    private function hasMustacheAncestor(DOMElement $element)
+    private function hasMustacheAncestor(Element $element)
     {
         $parent = $element->parentNode;
         while ($parent !== null) {
