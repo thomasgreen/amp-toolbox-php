@@ -73,10 +73,12 @@ final class PreloadHeroImage implements Transformer
      *
      * @var string[]
      */
-    const ATTRIBUTES_TO_INLINE = [
-        Attribute::OBJECT_FIT,
-        Attribute::OBJECT_POSITION,
-    ];
+    public function attributesToInline() {
+     return [
+         Attribute::OBJECT_FIT,
+         Attribute::OBJECT_POSITION,
+     ];
+    }
 
     /**
      * Maximum number of hero images defined via data-hero attribute.
@@ -535,7 +537,7 @@ final class PreloadHeroImage implements Transformer
             }
         }
 
-        foreach (self::ATTRIBUTES_TO_INLINE as $attribute) {
+        foreach (self::attributesToInline() as $attribute) {
             if ($element->hasAttribute($attribute)) {
                 $value = $element->getAttribute($attribute);
                 $style = empty($value) ? '' : "{$attribute}:{$element->getAttribute($attribute)}";
