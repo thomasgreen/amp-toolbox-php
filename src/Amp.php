@@ -3,13 +3,13 @@
 namespace AmpProject;
 
 use AmpProject\Dom\Document;
-use DOMElement;
+use AmpProject\Dom\Element;
 use DOMNode;
 
 /**
  * Central helper functionality for all Amp-related PHP code.
  *
- * @package ampproject/common
+ * @package ampproject/amp-toolbox
  */
 final class Amp
 {
@@ -129,6 +129,15 @@ final class Amp
     const INTRINSIC_SIZER_ELEMENT   = 'i-amphtml-intrinsic-sizer';
 
     /**
+     * Maximum size of the CSS styles in bytes.
+     *
+     * @todo Max size is hard-coded for now until we ported over the generated spec into a reusable package.
+     *
+     * @var int
+     */
+    const MAX_CSS_BYTE_COUNT = 75000;
+
+    /**
      * Check if a given node is the AMP runtime script.
      *
      * The AMP runtime script node is of the form '<script async src="https://cdn.ampproject.org...v0.js"></script>'.
@@ -139,7 +148,7 @@ final class Amp
     public static function isRuntimeScript(DOMNode $node)
     {
         if (
-            ! $node instanceof DOMElement
+            ! $node instanceof Element
             || ! self::isAsyncScript($node)
             || self::isExtension($node)
         ) {
@@ -174,7 +183,7 @@ final class Amp
     public static function isViewerScript(DOMNode $node)
     {
         if (
-            ! $node instanceof DOMElement
+            ! $node instanceof Element
             || ! self::isAsyncScript($node)
             || self::isExtension($node)
         ) {
@@ -215,7 +224,7 @@ final class Amp
      */
     public static function getExtensionName(DOMNode $node)
     {
-        if (! $node instanceof DOMElement || $node->tagName !== Tag::SCRIPT) {
+        if (! $node instanceof Element || $node->tagName !== Tag::SCRIPT) {
             return '';
         }
 
@@ -259,7 +268,7 @@ final class Amp
      */
     public static function isCustomElement(DOMNode $node)
     {
-        return $node instanceof DOMElement && strpos($node->tagName, Extension::PREFIX) === 0;
+        return $node instanceof Element && strpos($node->tagName, Extension::PREFIX) === 0;
     }
 
     /**
@@ -272,7 +281,7 @@ final class Amp
     {
         foreach ($document->head->childNodes as $node) {
             if (
-                $node instanceof DOMElement
+                $node instanceof Element
                 &&
                 $node->tagName === Tag::SCRIPT
                 &&
@@ -293,7 +302,7 @@ final class Amp
      */
     public static function isTemplate(DOMNode $node)
     {
-        if (! $node instanceof DOMElement) {
+        if (! $node instanceof Element) {
             return false;
         }
 
@@ -321,7 +330,7 @@ final class Amp
     private static function isAsyncScript(DOMNode $node)
     {
         if (
-            ! $node instanceof DOMElement
+            ! $node instanceof Element
             || $node->tagName !== Tag::SCRIPT
         ) {
             return false;
@@ -345,7 +354,7 @@ final class Amp
      */
     public static function isAmpIframe(DOMNode $node)
     {
-        if (! $node instanceof DOMElement) {
+        if (! $node instanceof Element) {
             return false;
         }
 

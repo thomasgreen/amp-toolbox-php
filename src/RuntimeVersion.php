@@ -31,7 +31,7 @@ namespace AmpProject;
  *    against, since prod's immutable caching would affect metrics.</li>
  *  </ul>
  *
- * @package ampproject/common
+ * @package ampproject/amp-toolbox
  */
 final class RuntimeVersion
 {
@@ -99,6 +99,6 @@ final class RuntimeVersion
      */
     private function padVersionString($version)
     {
-        return str_pad($version, 15, 0);
+        return str_pad($version, 15, '0');
     }
 }

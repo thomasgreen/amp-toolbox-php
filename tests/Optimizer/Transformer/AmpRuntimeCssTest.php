@@ -6,14 +6,15 @@ use AmpProject\Dom\Document;
 use AmpProject\Optimizer\Configuration\AmpRuntimeCssConfiguration;
 use AmpProject\Optimizer\ErrorCollection;
 use AmpProject\Tests\MarkupComparison;
+use AmpProject\Tests\TestCase;
 use AmpProject\Tests\TestMarkup;
 use AmpProject\RemoteRequest\StubbedRemoteGetRequest;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Test the AmpRuntimeCss transformer.
  *
- * @package ampproject/optimizer
+ * @covers \AmpProject\Optimizer\Transformer\AmpRuntimeCss
+ * @package ampproject/amp-toolbox
  */
 final class AmpRuntimeCssTest extends TestCase
 {

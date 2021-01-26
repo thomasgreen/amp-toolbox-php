@@ -8,13 +8,14 @@ use AmpProject\Optimizer\Error;
 use AmpProject\Optimizer\ErrorCollection;
 use AmpProject\Tests\ErrorComparison;
 use AmpProject\Tests\MarkupComparison;
+use AmpProject\Tests\TestCase;
 use AmpProject\Tests\TestMarkup;
-use PHPUnit\Framework\TestCase;
 
 /**
  * Test the PreloadHeroImage transformer.
  *
- * @package ampproject/optimizer
+ * @covers \AmpProject\Optimizer\Transformer\PreloadHeroImage
+ * @package ampproject/amp-toolbox
  */
 final class PreloadHeroImageTest extends TestCase
 {
@@ -116,7 +117,7 @@ final class PreloadHeroImageTest extends TestCase
                 [
                     Error\CannotPreloadImage::fromImageWithSrcsetAttribute(
                         Document::fromHtmlFragment(
-                            '<amp-img width="500" height="400" src="https://example-com.cdn.ampproject.org/foo.png" srcset="test 100w test2 3dpr"></amp-img>'
+                            '<amp-img data-hero width="500" height="400" src="https://example-com.cdn.ampproject.org/hero1.png" srcset="test 100w test2 3dpr"></amp-img>'
                         )->body->firstChild
                     ),
                 ],
@@ -188,6 +189,34 @@ final class PreloadHeroImageTest extends TestCase
                 [
                     PreloadHeroImageConfiguration::INLINE_STYLE_BACKUP_ATTRIBUTE => 'data-amp-original-style',
                 ]
+            ],
+
+            'copies alt, attribution, referrerpolicy, src, srcset, sizes and title attributes' => [
+                $input(
+                    '<amp-img data-hero width="500" height="400" src="/img1.png" alt="Some image" attribution="by someone" referrerpolicy="unknown" sizes="many" srcset="for2.jpg w320, foo3.jpg" title="the title"></amp-img>'
+                ),
+                $output(
+                    '<amp-img data-hero width="500" height="400" src="/img1.png" alt="Some image" attribution="by someone" referrerpolicy="unknown" sizes="many" srcset="for2.jpg w320, foo3.jpg" title="the title" i-amphtml-ssr>'
+                    . '<img class="i-amphtml-fill-content i-amphtml-replaced-content" decoding="async" src="/img1.png" alt="Some image" attribution="by someone" referrerpolicy="unknown" sizes="many" srcset="for2.jpg w320, foo3.jpg" title="the title">'
+                    . '</amp-img>',
+                    '<link rel=preload href="/img1.png" as="image" data-hero imagesizes="many" imagesrcset="for2.jpg w320, foo3.jpg">'
+                ),
+                [],
+                [
+                    PreloadHeroImageConfiguration::PRELOAD_SRCSET => true,
+                ]
+            ],
+
+            'inlines object-fit and object-position' => [
+                $input(
+                    '<amp-img data-hero width="500" height="400" src="/img1.png" object-fit="cover" object-position="right top"></amp-img>'
+                ),
+                $output(
+                    '<amp-img data-hero width="500" height="400" src="/img1.png" object-fit="cover" object-position="right top" i-amphtml-ssr>'
+                    . '<img class="i-amphtml-fill-content i-amphtml-replaced-content" decoding="async" src="/img1.png" style="object-fit:cover;object-position:right top;">'
+                    . '</amp-img>',
+                    '<link rel=preload href="/img1.png" as="image" data-hero>'
+                ),
             ],
         ];
     }

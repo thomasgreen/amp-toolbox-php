@@ -1,16 +1,15 @@
 <?php
 
-namespace AmpProject\Common;
+namespace AmpProject;
 
 use AmpProject\RemoteRequest\StubbedRemoteGetRequest;
-use AmpProject\RuntimeVersion;
-use PHPUnit\Framework\TestCase;
+use AmpProject\Tests\TestCase;
 
 /**
  * Tests for AmpProject\RuntimeVersion.
  *
- * @covers  RuntimeVersion
- * @package ampproject/common
+ * @covers  \AmpProject\RuntimeVersion
+ * @package ampproject/amp-toolbox
  */
 class RuntimeVersionTest extends TestCase
 {
@@ -41,7 +40,7 @@ class RuntimeVersionTest extends TestCase
     /**
      * Test whether the release version is returned by default.
      *
-     * @covers RuntimeVersion::currentVersion()
+     * @covers \AmpProject\RuntimeVersion::currentVersion()
      */
     public function testItReturnsReleaseVersionByDefault()
     {
@@ -52,7 +51,7 @@ class RuntimeVersionTest extends TestCase
     /**
      * Test whether the canary version can be requested via an option.
      *
-     * @covers RuntimeVersion::currentVersion()
+     * @covers \AmpProject\RuntimeVersion::currentVersion()
      */
     public function testItReturnsCanaryVersionViaOption()
     {

@@ -8,7 +8,7 @@ use RuntimeException;
 /**
  * Exception thrown when a remote request failed.
  *
- * @package ampproject/common
+ * @package ampproject/amp-toolbox
  */
 final class FailedToGetFromRemoteUrl extends RuntimeException implements FailedRemoteRequest
 {
@@ -33,7 +33,7 @@ final class FailedToGetFromRemoteUrl extends RuntimeException implements FailedR
     {
         $message = "Failed to fetch the contents from the URL '{$url}' as it returned HTTP status {$status}.";
 
-        $exception = new self($message);
+        $exception             = new self($message);
         $exception->statusCode = $status;
 
         return $exception;
@@ -63,7 +63,7 @@ final class FailedToGetFromRemoteUrl extends RuntimeException implements FailedR
     {
         $message = "Failed to fetch the contents from the URL '{$url}': {$exception->getMessage()}.";
 
-        return new self($message, null, $exception);
+        return new self($message, 0, $exception);
     }
 
     /**

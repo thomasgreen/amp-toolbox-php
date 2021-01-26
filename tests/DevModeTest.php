@@ -1,16 +1,15 @@
 <?php
 
-namespace AmpProject\Common;
+namespace AmpProject;
 
-use AmpProject\DevMode;
 use AmpProject\Dom\Document;
-use PHPUnit\Framework\TestCase;
+use AmpProject\Tests\TestCase;
 
 /**
  * Tests for AmpProject\DevMode.
  *
  * @covers  \AmpProject\DevMode
- * @package ampproject/common
+ * @package ampproject/amp-toolbox
  */
 class DevModeTest extends TestCase
 {
@@ -23,7 +22,10 @@ class DevModeTest extends TestCase
         ];
     }
 
-    /** @dataProvider dataIsActiveForDocument */
+    /**
+     * @dataProvider dataIsActiveForDocument
+     * @covers \AmpProject\DevMode::isActiveForDocument()
+     */
     public function testIsActiveForDocument($html, $expected)
     {
         $document = Document::fromHtml($html);
@@ -45,7 +47,10 @@ class DevModeTest extends TestCase
         return $testData;
     }
 
-    /** @dataProvider dataHasExemptionForNode */
+    /**
+     * @dataProvider dataHasExemptionForNode
+     * @covers \AmpProject\DevMode::hasExemptionForNode()
+     */
     public function testHasExemptionForNode($document, $expected)
     {
         $node = $document->xpath->query('//*[@id="node_to_test"]')->item(0);
@@ -62,7 +67,10 @@ class DevModeTest extends TestCase
         ];
     }
 
-    /** @dataProvider dataIsExemptFromValidation */
+    /**
+     * @dataProvider dataIsExemptFromValidation
+     * @covers \AmpProject\DevMode::isExemptFromValidation()
+     */
     public function testIsExemptFromValidation($html, $expected)
     {
         $document = Document::fromHtml($html);

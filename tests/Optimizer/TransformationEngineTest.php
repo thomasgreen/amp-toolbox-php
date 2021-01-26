@@ -4,17 +4,18 @@ namespace AmpProject\Optimizer;
 
 use AmpProject\Dom\Document;
 use AmpProject\Tests\MarkupComparison;
+use AmpProject\Tests\TestCase;
 use AmpProject\Tests\TestMarkup;
 use AmpProject\Tests\TestTransformer;
 use AmpProject\RemoteRequest\StubbedRemoteGetRequest;
-use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionException;
 
 /**
  * Test the transformation engine as a whole.
  *
- * @package ampproject/optimizer
+ * @covers \AmpProject\Optimizer\TransformationEngine
+ * @package ampproject/amp-toolbox
  */
 final class TransformationEngineTest extends TestCase
 {
@@ -68,7 +69,7 @@ final class TransformationEngineTest extends TestCase
      * All conversion details will be the same as with optimizeHtml, so there's no point
      * in testing everything twice.
      *
-     * @covers TransformationEngine::optimizeDom()
+     * @covers       \AmpProject\Optimizer\TransformationEngine::optimizeDom()
      */
     public function testOptimizeDom()
     {
