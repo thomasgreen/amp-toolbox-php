@@ -1362,6 +1362,13 @@ final class Document extends DOMDocument
 
             // Note: The order of these tokens is important, as it determines the order of the replacements.
             $tokens = [
+                '{{{ ',
+                ' }}}',
+                '{{# ',
+                '{{^ ',
+                '{{/ ',
+                '{{ ',
+                ' }}',
                 '{{{',
                 '}}}',
                 '{{#',
